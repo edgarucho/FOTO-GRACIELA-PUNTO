@@ -2058,28 +2058,49 @@ function folImprimirLote(){
   const html = folEncontrados.map((s,i)=>
     `<div class="ticket-lote"${i<folEncontrados.length-1?' style="page-break-after:always"':''}>${ticketHTML(s)}</div>`
   ).join('');
-  $('#printArea').innerHTML = html;
-  if(estacionActiva()){ enviarAEstacion(html); }
-  else { window.print(); }
-  // Después de imprimir, dejar el printArea como estaba (un solo ticket)
-  setTimeout(()=>{ if(currentTicketSale) $('#printArea').innerHTML=ticketHTML(currentTicketSale); }, 500);
+  if(estacionActiva()){
+    folEncontrados.forEach(v=> enviarTicketEstacion(v));
+    toast('🖨 '+folEncontrados.length+' ticket(s) enviados a la PC ✓', true);
+  } else {
+    $('#printArea').innerHTML = html;
+    window.print();
+    // Después de imprimir, dejar el printArea como estaba (un solo ticket)
+    setTimeout(()=>{ if(currentTicketSale) $('#printArea').innerHTML=ticketHTML(currentTicketSale); }, 500);
+  }
 }
 
-/* ===== Impresión: local (window.print) o remota (estación en la PC) ===== */
+/* ===== Impresión: local (window.print) o remota (estación nativa en la PC) ===== */
 function estacionActiva(){ return localStorage.getItem('pos_print_remoto')==='1'; }
-async function enviarAEstacion(html){
+function ticketData(s){
+  const d=new Date(s.ts);
+  const anticipo=s.anticipo!=null?s.anticipo:s.total; const resta=s.resta!=null?s.resta:0;
+  return {
+    negocio: (typeof BIZ!=='undefined'?BIZ.name:'FOTO ESTUDIO GRACIELA'),
+    dir: (typeof BIZ!=='undefined'?BIZ.addr:''),
+    contacto: (typeof BIZ!=='undefined'?(BIZ.tel||''):''),
+    fecha: d.toLocaleDateString('es-MX')+' '+d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
+    folio: s.folio? ('#'+folioFmt(s.folio)) : '',
+    cliente: s.cliente||'', telefono: s.telefono||'', atendio: s.user||'',
+    items: (s.items||[]).map(i=>({ name:i.name, qty:i.qty, importe:(i.price*i.qty) })),
+    anticipo: anticipo, resta: resta, total: s.total||0,
+    pago: s.method||'', recibido: (s.recibido!=null?s.recibido:null), cambio: (s.cambio!=null?s.cambio:null),
+    adeuda: (anticipo===0 && s.total>0)
+  };
+}
+async function enviarTicketEstacion(s){
   if(!cloud || !SB){ toast('Sin conexión a la nube para la estación'); return false; }
   const id = 'printjob:'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
   try{
-    const { error } = await SB.from('kv').insert({ key:id, value:{ html:html, ts:Date.now() } });
+    const { error } = await SB.from('kv').insert({ key:id, value:{ tipo:'ticket', t:ticketData(s), ts:Date.now() } });
     if(error) throw error;
     toast('🖨 Enviado a la impresora de la PC ✓', true);
     return true;
   }catch(e){ toast('No se pudo enviar a la estación. ¿Está abierta en la PC?'); return false; }
 }
-function imprimirHTML(html){
-  if(estacionActiva()){ enviarAEstacion(html); }
-  else { $('#printArea').innerHTML = html; window.print(); }
+function imprimirVenta(s){
+  if(!s){ window.print(); return; }
+  if(estacionActiva()){ enviarTicketEstacion(s); }
+  else { $('#printArea').innerHTML = ticketHTML(s); window.print(); }
 }
 
 // Recordar la preferencia del checkbox
@@ -2089,7 +2110,7 @@ function imprimirHTML(html){
     chk.onchange = ()=> localStorage.setItem('pos_print_remoto', chk.checked?'1':'0'); }
 })();
 
-$('#ticketPrint').onclick=()=> imprimirHTML(currentTicketSale ? ticketHTML(currentTicketSale) : $('#printArea').innerHTML);
+$('#ticketPrint').onclick=()=> imprimirVenta(currentTicketSale);
 $('#ticketNew').onclick=()=> $('#ticketModal').classList.add('hidden');
 $('#ticketClose').onclick=()=> $('#ticketModal').classList.add('hidden');
 async function downloadTicketPDF(){
