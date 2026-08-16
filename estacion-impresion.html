@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estación de impresión · Foto Graciela</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{ --ink:#241d16; --line:#e6ddd0; --muted:#7d6d59; --gold:#c5572a; --danger:#c0392b; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f6efe5;color:#241d16}
+  .wrap{max-width:520px;margin:0 auto;padding:30px 18px;text-align:center}
+  h1{font-size:22px;margin:6px 0}
+  .estado{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 20px;font-weight:700;margin:14px 0}
+  .dot{width:12px;height:12px;border-radius:50%;background:#1f7a4d;box-shadow:0 0 0 0 rgba(31,122,77,.5);animation:pulso 1.8s infinite}
+  @keyframes pulso{0%{box-shadow:0 0 0 0 rgba(31,122,77,.5)}70%{box-shadow:0 0 0 12px rgba(31,122,77,0)}100%{box-shadow:0 0 0 0 rgba(31,122,77,0)}}
+  .info{color:var(--muted);font-size:14px;line-height:1.5;margin:10px 0}
+  .cont{font-size:40px;font-weight:800;color:var(--gold);margin:6px 0}
+  .aviso{background:#fff4e8;border:1px solid #f0c89a;border-radius:10px;padding:12px 14px;font-size:13px;color:#8a5a1e;margin-top:16px;text-align:left}
+  button{font-family:inherit;font-weight:700;font-size:15px;padding:12px 20px;border:none;border-radius:10px;background:var(--ink);color:#fff;cursor:pointer;margin-top:10px}
+  .log{margin-top:18px;text-align:left;font-size:12px;color:var(--muted);max-height:180px;overflow:auto}
+  .log div{padding:4px 0;border-bottom:1px solid var(--line)}
+  /* ---- estilos del ticket (iguales al POS) ---- */
+  /* ---------- NOTA (ticket) ---------- */
+  .nota{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#000;background:#fff;width:100%;max-width:340px;margin:0 auto;font-size:13px;line-height:1.4;font-weight:600}
+  .nota .n-logo{font-weight:800;letter-spacing:2px;border:2.5px solid #000;border-radius:8px;width:54px;text-align:center;margin:0 auto 6px;padding:2px 0;font-size:20px}
+  .nota .n-biz{text-align:center;margin-bottom:6px}
+  .nota .n-name{font-weight:800;font-size:17px;line-height:1.15}
+  .nota .n-line{font-size:10px;line-height:1.3}
+  .nota .n-badge{background:#000;color:#fff;font-weight:800;text-align:center;padding:5px;border-radius:5px;letter-spacing:1px;margin:8px 0}
+  .nota .n-fecha{text-align:center;font-size:12px;margin-bottom:8px}
+  .nota .n-fld{margin:5px 0;font-size:16px;font-weight:700}
+  .nota .n-fld span{font-weight:800;font-size:15px}
+  .nota .n-sep{border-top:1px dashed #000;margin:8px 0}
+  .nota .n-chks{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-bottom:6px}
+  .nota .n-color{display:flex;gap:28px;margin-bottom:2px}
+  .nota .n-chk{font-size:11.5px;font-weight:700;display:flex;align-items:center}
+  .nota .nbox{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border:1.5px solid #000;margin-right:6px;font-size:11px;font-weight:800;line-height:1}
+  .nota .n-ind{margin:5px 0;font-size:11.5px}
+  .nota .n-tab{width:100%;border-collapse:collapse;margin:4px 0}
+  .nota .n-tab th{text-align:left;font-size:13px;font-weight:800;border-bottom:2px solid #000;padding:4px 2px}
+  .nota .n-tab th.c,.nota .n-tab td.c{text-align:center}
+  .nota .n-tab th.r,.nota .n-tab td.r{text-align:right}
+  .nota .n-tab td{padding:6px 2px;border-bottom:1px solid #666;vertical-align:top;font-size:15px;font-weight:700}
+  .nota .n-sub{font-size:11px;color:#000;font-weight:600}
+  .nota .n-art{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin:8px 0}
+  .nota .n-box{border:2px solid #000;border-radius:14px;padding:8px 14px;margin-top:4px}
+  .nota .n-art-row{display:flex;justify-content:space-between;font-weight:700;font-size:13px;padding:2px 0}
+  .nota .n-art-row.tot{font-size:16px;border-top:1px solid #000;margin-top:3px;padding-top:5px}
+  .nota .n-pay{font-size:12.5px;font-weight:700;text-align:center;margin-top:7px}
+  .nota .n-foot{text-align:center;font-size:13.5px;margin-top:7px;font-weight:800}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#16161c;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:#b23b3b}
+  .toast.ok{background:#1f7a4d}
+
+  #idleModal{position:fixed;inset:0;background:rgba(12,12,16,.62);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:90}
+  #idleModal.show{display:flex}
+  #idleModal .ibox{background:#fff;color:#16161c;padding:30px 32px;border-radius:16px;max-width:400px;width:90%;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  #idleModal h3{margin:0 0 10px;font-size:21px;font-weight:800}
+  #idleModal p{margin:0;color:#555;font-size:15px;line-height:1.4}
+  #idleCount{font-size:52px;font-weight:800;margin:12px 0;color:#b23b3b;line-height:1}
+  #idleStay{margin-top:18px;width:100%;padding:13px;border:none;border-radius:10px;background:#16161c;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+  #idleStay:hover{background:#000}
+
+  .ord-fieldfull{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fbfaf7;font-family:inherit;font-size:14px}
+  .ord-fieldfull:focus{outline:none;border-color:var(--gold)}
+  #edItems{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+  .ed-row{border:1.5px solid var(--line);border-radius:10px;padding:10px;background:#fbfaf7}
+  .ed-row-main{display:flex;gap:8px;align-items:center}
+  .ed-row-main .ed-iname{flex:1;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px;background:#fff;font-size:14px}
+  .ed-del{width:32px;height:32px;border-radius:8px;background:#f3e3e3;color:var(--danger);font-weight:800;border:none;cursor:pointer;flex:none}
+  .ed-row-nums{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .ed-row-nums label{font-size:11px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .ed-row-nums input{width:72px;padding:8px;border:1.5px solid var(--line);border-radius:8px;background:#fff;font-size:14px;text-align:center}
+  .ed-row-nums input:focus{outline:none;border-color:var(--gold)}
+  .ed-isub{margin-left:auto;font-weight:800;font-size:14px}
+  .ed-add{width:100%;padding:11px;border:1.5px dashed var(--line);border-radius:9px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}
+  .ed-add:hover{background:#fbfaf7}
+  .ed-tot-row{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-top:1.5px solid var(--line);margin-bottom:12px;font-weight:700}
+  .ed-tot-row b{font-size:20px}
+
+  .debt-toggle{width:100%;padding:13px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}
+  .debt-toggle:hover{background:#fbfaf7}
+  .debt-toggle.on{background:#b23b3b;border-color:#b23b3b;color:#fff}
+  .tag-debt{display:inline-block;background:#b23b3b;color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px;margin-left:5px;vertical-align:middle;letter-spacing:.3px}
+  .nota .n-debt{margin:7px 0;text-align:center;font-weight:800;font-size:11px;border:1.5px solid #000;border-radius:5px;padding:5px;letter-spacing:.6px}
+
+  #printArea{display:none}
+
+  @media print{
+    /* Rollo térmico 80mm: ancho fijo, alto automático (corta justo al terminar) */
+    @page{ size:80mm auto; margin:0; }
+    html,body{ width:80mm; background:#fff; margin:0; padding:0; }
+    /* Solo imprime el ticket; todo lo demás se colapsa para no gastar papel */
+    body > *:not(#printArea){ display:none !important; }
+    #printArea{ display:block; width:80mm; padding:1.5mm 3mm 6mm; box-sizing:border-box; }
+    .ticket-lote{ width:100%; }
+    .nota{ width:100%; max-width:none; margin:0; font-size:13px; line-height:1.38; font-weight:600; }
+    .nota *{ color:#000 !important; }
+    .nota .n-logo-img{ height:13mm; }
+    .nota .n-name{ font-size:17px; }
+    .nota .n-line{ font-size:9.5px; }
+    .nota .n-fld{ font-size:15px; }
+    .nota .n-fld span{ font-size:14px; }
+    /* Evita bloques negros sólidos: contornos en vez de relleno */
+    .nota .n-badge{ background:#fff !important; color:#000 !important; border:2px solid #000; }
+    .nota .n-box{ border:2px solid #000; }
+    .nota .n-sub{ color:#000 !important; font-size:11px; }
+    .nota .n-tab th{ font-size:12px; }
+    .nota .n-tab td{ font-size:14.5px; }
+    .nota .n-art{ font-size:12.5px; }
+    .nota .n-art-row{ font-size:13.5px; }
+    .nota .n-art-row.tot{ font-size:16px; }
+    .nota .n-pay{ font-size:12px; }
+    .nota .n-foot{ font-size:13px; }
+  }
+  .logo-img{height:40px;width:auto;display:block}
+  .login-logo{height:88px;width:auto;display:block;margin:0 auto 4px}
+
+  /* En pantalla, el área de impresión no se ve */
+  #printArea{ display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🖨 Estación de impresión</h1>
+  <div class="estado"><span class="dot"></span> <span id="estadoTxt">Iniciando…</span></div>
+  <div class="cont"><span id="contador">0</span></div>
+  <div class="info">tickets impresos en esta sesión</div>
+  <div class="info">Deja esta página <b>abierta en la PC</b> con la impresora. Cuando alguien imprima desde el celular o tablet, el ticket sale aquí solo.</div>
+  <button id="btnProbar">Imprimir ticket de prueba</button>
+  <div class="aviso"><b>Importante:</b> abre esta página con el acceso directo de <b>modo kiosco</b> (IMPRIMIR-POS) para que salga sin diálogo. La impresora térmica debe estar como <b>predeterminada</b> y en <b>80mm</b>.</div>
+  <div class="log" id="log"></div>
+</div>
+<div id="printArea"></div>
+
+<script>
+const SUPABASE_URL = "https://ezbvcwteeggvlpyqgcer.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_44SQZF-WnOIBSADrP6Jwsg_daAiQ-nR";
+const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const $ = s => document.querySelector(s);
+let contador = 0;
+const impresos = new Set();
+let ocupado = false;
+
+function log(msg){
+  const d = document.createElement('div');
+  const h = new Date();
+  d.textContent = `${String(h.getHours()).padStart(2,'0')}:${String(h.getMinutes()).padStart(2,'0')}:${String(h.getSeconds()).padStart(2,'0')} · ${msg}`;
+  $('#log').prepend(d);
+}
+
+// Imprime un HTML de ticket (silencioso en modo kiosco)
+function imprimir(html){
+  return new Promise(resolve=>{
+    $('#printArea').innerHTML = html;
+    setTimeout(()=>{
+      window.print();
+      setTimeout(()=>{ $('#printArea').innerHTML=''; resolve(); }, 1200);
+    }, 250);
+  });
+}
+
+async function revisarCola(){
+  if(ocupado) return;
+  ocupado = true;
+  try{
+    const { data, error } = await SB.from('kv')
+      .select('key,value')
+      .like('key','printjob:*')
+      .order('key',{ascending:true});
+    if(error) throw error;
+    $('#estadoTxt').textContent = 'Activa · esperando tickets';
+    const pendientes = (data||[]).filter(r=> !impresos.has(r.key));
+    for(const r of pendientes){
+      impresos.add(r.key);
+      const html = r.value && r.value.html ? r.value.html : '';
+      if(html){
+        log('Imprimiendo ticket…');
+        await imprimir(html);
+        contador++; $('#contador').textContent = contador;
+        log('✓ Impreso');
+      }
+      // Quitar de la cola (borrar; si no se puede, ya quedó en "impresos")
+      try{ await SB.from('kv').delete().eq('key', r.key); }catch(e){}
+    }
+  }catch(e){
+    $('#estadoTxt').textContent = 'Sin conexión — reintentando…';
+    log('Error de conexión');
+  }finally{
+    ocupado = false;
+  }
+}
+
+$('#btnProbar').onclick = ()=>{
+  imprimir('<div class="nota"><div class="n-name">FOTO ESTUDIO GRACIELA</div>'+
+    '<div class="n-line">Ticket de prueba</div>'+
+    '<div class="n-art"><div class="n-art-row">Impresión de prueba ✓</div></div>'+
+    '<div class="n-foot">Estación de impresión funcionando</div></div>');
+};
+
+log('Estación iniciada');
+revisarCola();
+setInterval(revisarCola, 3000);
+</script>
+</body>
+</html>
