@@ -1475,7 +1475,7 @@ const DEFAULT_CATALOG = [
     ['Bastidor y poliéster · flor',1800],['Bastidor y poliéster · huella',1800],['Bastidor y poliéster · base grande',2800],
   ]},
   {tier:'publico', name:'Siluetas tamaño real', note:'Si la imagen requiere escaneo: +$450.', items:[
-    ['Sin textura 120 cm',1200],['Sin textura 150 cm',1500],['Sin textura 160 cm',1800],['Sin textura 170 cm',2000],
+    ['Sin textura 120 cm',1400],['Sin textura 150 cm',1700],['Sin textura 160 cm',1900],['Sin textura 170 cm',2000],
     ['Con textura 120 cm',2000],['Con textura 150 cm',2200],['Con textura 160 cm',2500],['Con textura 170 cm',2800],
   ]},
   {tier:'publico', name:'Tazas', items:[
@@ -1484,14 +1484,14 @@ const DEFAULT_CATALOG = [
     ['Mágica/cuchara (12 a 24)',80],['Mágica/cuchara (25 a 50)',73],
   ]},
   {tier:'publico', name:'Vidrio / fibracel', items:[
-    ['Vidrio normal 8x10',50],['Vidrio normal 11x14',60],['Vidrio normal 16x20',120],['Vidrio normal 20x24',150],['Vidrio normal 20x32',250],
+    ['Vidrio normal 8x10',50],['Vidrio normal 11x14',65],['Vidrio normal 16x20',120],['Vidrio normal 20x24',150],['Vidrio normal 20x32',250],
     ['Antirreflejante 8x10',120],['Antirreflejante 11x14',150],['Antirreflejante 16x20',250],['Antirreflejante 20x24',350],['Antirreflejante 20x32',550],
     ['Solo fibracel 8x10',30],['Solo fibracel 11x14',45],['Solo fibracel 16x20',60],['Solo fibracel 20x24',85],['Solo fibracel 20x32',120],
   ]},
   {tier:'publico', name:'Vastidores (sin poliéster)', items:[
-    ['6x8',70],['8x10',90],['6x12',90],['8x14',130],['8x16',150],['8x18',180],['8x20',220],
-    ['11x14',220],['11x16',240],['11x18',260],['11x20',300],['16x20',350],['16x24',370],
-    ['20x24',390],['20x30',400],['20x32',430],
+    ['6x8',70],['8x10',180],['6x12',180],['8x14',200],['8x16',240],['8x18',260],['8x20',260],
+    ['11x14',300],['11x16',320],['11x18',340],['11x20',360],['16x20',400],['16x24',440],
+    ['20x24',500],['20x30',540],['20x32',680],
   ]},
   {tier:'publico', name:'Macocel / poliéster', items:[
     ['Macocel y texturizado 8x10',200],['Macocel y texturizado 11x14',380],['Macocel y texturizado 12x18',450],
@@ -1501,10 +1501,10 @@ const DEFAULT_CATALOG = [
   {tier:'publico', name:'Textura / pegamento', items:[
     ['Solo textura 6x8',100],['Solo textura 8x10',150],['Solo textura 8x20',180],['Solo textura 11x14',200],
     ['Solo textura 12x18',250],['Solo textura 16x20',300],['Solo textura 20x24',400],['Solo textura 20x32',550],
-    ['Solo pegamento 6x8',65],['Solo pegamento 8x10',90],['Solo pegamento 8x20',125],['Solo pegamento 11x14',125],
-    ['Solo pegamento 12x18',125],['Solo pegamento 16x20',175],['Solo pegamento 20x24',225],['Solo pegamento 20x32',300],
-    ['Textura y pegamento 6x8',130],['Textura y pegamento 8x10',200],['Textura y pegamento 8x20',250],['Textura y pegamento 11x14',250],
-    ['Textura y pegamento 12x18',300],['Textura y pegamento 16x20',350],['Textura y pegamento 20x24',450],['Textura y pegamento 20x32',600],
+    ['Solo pegamento 6x8',65],['Solo pegamento 8x10',90],['Solo pegamento 8x20',110],['Solo pegamento 11x14',105],
+    ['Solo pegamento 12x18',115],['Solo pegamento 16x20',175],['Solo pegamento 20x24',225],['Solo pegamento 20x32',300],
+    ['Textura y pegamento 6x8',130],['Textura y pegamento 8x10',200],['Textura y pegamento 8x20',220],['Textura y pegamento 11x14',230],
+    ['Textura y pegamento 12x18',240],['Textura y pegamento 16x20',350],['Textura y pegamento 20x24',450],['Textura y pegamento 20x32',600],
   ]},
   {tier:'publico', name:'Digitalización / películas', items:[
     ['Vaciar a USB (1 a 20)',15],['Vaciar a USB (21 a 50)',25],['Vaciar a USB (51 a 100)',35],
@@ -1528,7 +1528,7 @@ const DEFAULT_CATALOG = [
   ]},
   {tier:'publico', name:'Renta', note:'Varias togas: precio especial.', items:[
     ['Solo birrete',80],['Solo banda',50],['Solo borla',30],
-    ['Toga completa c/u',280],['Toga infantil c/u',200],['Caballete por día',200],
+    ['Toga completa c/u',280],['Toga infantil c/u',200],['Caballete por día',250],
   ]},
 
   /* ---------------- FOTÓGRAFO ---------------- */
@@ -1753,6 +1753,74 @@ function autoTipos(){
 /* =========================================================
    ARRANQUE
    ========================================================= */
+/* =========================================================
+   CAMBIO DE PRECIOS · 14 de octubre de 2026
+   ---------------------------------------------------------
+   Los precios NO viven en este archivo: viven en Supabase, en
+   el catálogo que ya tienes guardado. Cambiar la lista de
+   arriba solo sirve para una instalación nueva.
+
+   Esto los aplica al catálogo guardado, UNA SOLA VEZ. Después
+   queda apuntado en 'preciosRev' y ya no se vuelve a meter:
+   si mañana cambias un precio a mano en el Catálogo, se
+   respeta.
+   ========================================================= */
+const PRECIOS_REV = 20261014;
+
+const PRECIOS_NUEVOS = {
+  'Textura / pegamento': {
+    'Solo pegamento 8x20':110, 'Solo pegamento 11x14':105, 'Solo pegamento 12x18':115,
+    'Textura y pegamento 8x20':220, 'Textura y pegamento 11x14':230,
+    'Textura y pegamento 12x18':240,
+  },
+  'Siluetas tamaño real': {
+    'Sin textura 120 cm':1400, 'Sin textura 150 cm':1700, 'Sin textura 160 cm':1900,
+  },
+  'Vastidores (sin poliéster)': {
+    '8x10':180, '6x12':180, '8x14':200, '8x16':240, '8x18':260, '8x20':260,
+    '11x14':300, '11x16':320, '11x18':340, '11x20':360, '16x20':400, '16x24':440,
+    '20x24':500, '20x30':540, '20x32':680,
+  },
+  'Vidrio / fibracel': {
+    'Vidrio normal 11x14':65,
+  },
+  'Renta': {
+    'Caballete por día':250,
+  },
+};
+
+async function aplicarPreciosNuevos(){
+  if(!cloud || !Array.isArray(mem.catalog)) return;
+  const rev = Number(await loadKey('preciosRev', 0)) || 0;
+  if(rev >= PRECIOS_REV) return;            // ya se aplicaron
+
+  let cambiados = 0;
+  const perdidos = [];
+  for(const cat of Object.keys(PRECIOS_NUEVOS)){
+    const c = mem.catalog.find(x => x.name === cat);
+    if(!c || !Array.isArray(c.items)){ perdidos.push(cat); continue; }
+    for(const nombre of Object.keys(PRECIOS_NUEVOS[cat])){
+      const precio = PRECIOS_NUEVOS[cat][nombre];
+      const it = c.items.find(y => y.n === nombre);
+      if(!it){ perdidos.push(cat+' · '+nombre); continue; }
+      if(Number(it.p) !== precio){ it.p = precio; cambiados++; }
+    }
+  }
+  if(cambiados) await saveKey('catalog');
+
+  mem.preciosRev = PRECIOS_REV;
+  await saveKey('preciosRev');
+
+  if(cambiados || perdidos.length){
+    let msg = 'Precios actualizados: ' + cambiados;
+    if(perdidos.length){
+      msg += ' · ' + perdidos.length + ' no se encontraron (revisa el Catálogo)';
+      console.warn('Precios que no se encontraron:', perdidos);
+    }
+    toast(msg);
+  }
+}
+
 function seedCatalog(){
   return DEFAULT_CATALOG.map(c=>({
     id: uid(), tier:c.tier, name:c.name, note:c.note||'', folio:!!c.folio,
@@ -1842,6 +1910,7 @@ const ready = (async function init(){
   mem.catalog = await loadKey('catalog', null);
   if(!mem.catalog){ mem.catalog = seedCatalog(); await saveKey('catalog'); }
   else if(migrateCatalog(mem.catalog)){ await saveKey('catalog'); }
+  await aplicarPreciosNuevos();
   asegurarFotoLaser();
   await impCargarPrecios();
   await mkCargar();
